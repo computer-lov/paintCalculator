@@ -3,6 +3,8 @@
 const prompt = require('prompt-sync')();
 const math = require('mathjs');
 
+module.exports = { calcWallArea, sumArr, calcRoomArea, formatPrice };
+
 // values inspired by prices found on benjaminmoore.com
 const paints = {
     white1: '56.99',
