@@ -1,6 +1,7 @@
 // paint calculator 
 
 const prompt = require('prompt-sync')();
+const math = require('mathjs');
 
 // values inspired by prices found on benjaminmoore.com
 const paints = {
@@ -51,8 +52,8 @@ function getShape() {
     let shape;
     let isValid = false;
     while (!isValid) {
-        shape = parseInt(prompt("Please provide us with the shape of your wall. Press (1) Rectangle or (2) Triangle: "));
-        if (shape == 1 || shape == 2) isValid = true;
+        shape = parseInt(prompt("Please provide us with the shape of your wall. Press (1) Rectangle (2) Triangle (3) Circle: "));
+        if (shape == 1 || shape == 2 || shape == 3) isValid = true;
         else invalidMessage();
     }
     return shape;
@@ -92,10 +93,24 @@ function getObstructions() {
     return sumArr(obscrtArr);
 }
 
-// rectangle: (l*w - obscrt) or triange: (0.5*l*w - obscrt)
-function calcWallArea(shape, length, height, obscrtSum) {
-    if (shape == 1 || shape == 2) return (length*height - obscrtSum);
-    else return (0.5*length*height - obscrtSum);
+// rectangle: (l*w - obscrt) or triange or (0.5*l*w - obscrt) or circle (pi * r^2)
+function calcWallArea(shape, length, height, radius, obscrtSum) {
+    let wallArea = 0;
+    switch(shape) {
+        case 1: // rectangle
+            wallArea = math.multiply(length, height) - obscrtSum;
+            break;
+        case 2: // triangle
+            wallArea = math.multiply(0.5, length, height) - obscrtSum;
+            break;
+        case 3: // circle
+            wallArea = math.multiply(math.pi, math.square(radius)) - obscrtSum;
+            break;
+        default:
+            console.log("Error. Invalid shape. ")
+            break;
+    }
+    return wallArea;
 }
 
 // calculates total area for a given room
@@ -215,21 +230,29 @@ function main() {
         for (let j = 0; j < numWalls; j++) {
             console.log("Wall " + (j+1).toString());
             let currShape = getShape();
-            let currLength = getMeasurement("Length (ft): ");
-            let currHeight = getMeasurement("Height (ft): ");
+            let currLength = 0;
+            let currHeight = 0;
+            let currRadius = 0;
+            if (currShape == 3) { // circle
+                currRadius = getMeasurement("Radius (ft): ");
+            }
+            else { // rectangle or triangle
+                currLength = getMeasurement("Length (ft): ");
+                currHeight = getMeasurement("Height (ft): ");
+            }
             let currObscrt = getObstructions();
-            wallAreaArr.push(calcWallArea(currShape, currLength, currHeight, currObscrt));
+            wallAreaArr.push(calcWallArea(currShape, currLength, currHeight, currRadius, currObscrt));
         }
         let roomArea = calcRoomArea(wallAreaArr)
         roomAreaArr.push(roomArea);
         let roomPrice = calcRoomPrice(paintQual, paintColor, roomArea);
-        roomPriceArr.push(calcRoomPrice(paintQual, paintColor, roomArea));
+        roomPriceArr.push(roomPrice);
     }
     let totalPrice = sumArr(roomPriceArr);
     let totalArea = sumArr(roomAreaArr);
     
     // display price
-    console.log("Total Area: " + totalArea.toString() + " sq ft");
+    console.log("Total Area: " + totalArea.toFixed(2) + " sq ft");
     console.log("Your estimated price: ", formatPrice(totalPrice));
 }
 
